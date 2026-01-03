@@ -69,7 +69,7 @@ export const TodayFocus: React.FC = () => {
             </div>
 
             <div className="flex-1 space-y-5">
-                {loading.tasks && focusTasks.length === 0 ? (
+                {loading && focusTasks.length === 0 ? (
                     <div className="flex justify-center py-12">
                         <LoadingSpinner size="lg" />
                     </div>
@@ -104,7 +104,7 @@ export const TodayFocus: React.FC = () => {
                             </div>
                         ))}
 
-                        {focusTasks.length === 0 && !loading.tasks && (
+                        {focusTasks.length === 0 && !loading && (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <p className="text-slate-400 text-sm font-bold mb-2">Hozircha Focus vazifalar yo'q!</p>
                                 <span className="text-slate-300 text-[10px] font-medium">Yangi Focus vazifa qo'shish uchun tugmani bosing.</span>
@@ -114,10 +114,10 @@ export const TodayFocus: React.FC = () => {
                         <button
                             onClick={handleAddFocus}
                             className="w-full h-16 border-2 border-dashed border-slate-200 rounded-3xl flex items-center justify-center gap-3 text-slate-400 font-bold hover:bg-white hover:border-accent hover:text-accent ios-transition group"
-                            disabled={loading.tasks}
+                            disabled={loading}
                         >
                             <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-accent/10 ios-transition">
-                                {loading.tasks ? (
+                                {loading ? (
                                     <LoadingSpinner size="sm" />
                                 ) : (
                                     <Plus size={18} />

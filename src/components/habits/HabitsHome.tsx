@@ -106,7 +106,7 @@ export const HabitsHome: React.FC = () => {
 
     return (
         <div className="p-5 space-y-6 animate-ios-slide-up bg-ios-bg relative">
-            {loading.habits && <LoadingOverlay />}
+            {loading && <LoadingOverlay />}
 
             <div className="flex justify-between items-center pt-2">
                 <div>
@@ -127,7 +127,7 @@ export const HabitsHome: React.FC = () => {
                     <Button
                         className="w-10 h-10 rounded-2xl p-0 flex items-center justify-center shadow-lg"
                         onClick={handleAddHabit}
-                        loading={loading.habits}
+                        loading={loading}
                     >
                         <Plus size={24} />
                     </Button>
@@ -185,7 +185,7 @@ export const HabitsHome: React.FC = () => {
                 ))}
             </div>
 
-            {loading.habits && habits.length === 0 ? (
+            {loading && habits.length === 0 ? (
                 <div className="flex justify-center py-12">
                     <LoadingSpinner size="lg" />
                 </div>

@@ -97,7 +97,7 @@ export default function App() {
     <ErrorBoundary
       onError={(error, errorInfo) => {
         errorHandler.logError(error, {
-          componentStack: errorInfo.componentStack,
+          componentStack: errorInfo.componentStack || undefined,
         });
       }}
     >

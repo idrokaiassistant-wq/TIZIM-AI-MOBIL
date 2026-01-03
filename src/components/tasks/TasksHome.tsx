@@ -167,7 +167,7 @@ export const TasksHome: React.FC = () => {
     // Daily view (default)
     return (
         <div className="p-5 space-y-6 animate-ios-slide-up flex flex-col h-full bg-ios-bg relative">
-            {loading.tasks && <LoadingOverlay />}
+            {loading && <LoadingOverlay />}
 
             <div className="flex justify-between items-center pt-2">
                 <div>
@@ -188,7 +188,7 @@ export const TasksHome: React.FC = () => {
                     <Button
                         className="w-10 h-10 rounded-2xl p-0 flex items-center justify-center shadow-lg"
                         onClick={handleAddTask}
-                        loading={loading.tasks}
+                        loading={loading}
                     >
                         <Plus size={24} />
                     </Button>
@@ -277,7 +277,7 @@ export const TasksHome: React.FC = () => {
                         Kutilmoqda
                         <span className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">{pendingTasks.length}</span>
                     </h3>
-                    {loading.tasks && tasks.length === 0 ? (
+                    {loading && tasks.length === 0 ? (
                         <div className="space-y-3">
                             {Array.from({ length: 3 }).map((_, i) => (
                                 <TaskSkeleton key={i} />
