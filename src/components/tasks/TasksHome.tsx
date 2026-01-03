@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, Button, LoadingSpinner, LoadingOverlay } from '../shared';
-import { Search, Plus, Clock, MoreVertical, Check, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Clock, Check, Edit, Trash2 } from 'lucide-react';
 import { useStore, type TaskLocal } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
 

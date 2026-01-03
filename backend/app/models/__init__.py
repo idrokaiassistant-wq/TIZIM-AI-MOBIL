@@ -7,6 +7,8 @@ from .budget import Budget
 from .productivity_log import ProductivityLog
 from .note import Note
 from .category import Category
+from .log import Log
+from .metric import Metric
 
 __all__ = [
     "User",
@@ -18,5 +20,7 @@ __all__ = [
     "ProductivityLog",
     "Note",
     "Category",
+    "Log",
+    "Metric",
 ]
 

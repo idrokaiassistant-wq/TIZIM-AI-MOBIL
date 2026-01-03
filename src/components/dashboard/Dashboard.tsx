@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Card, LoadingSpinner } from '../shared';
-import { CheckSquare, DollarSign, Activity, TrendingUp, Briefcase, User, BookOpen, Check, LogOut } from 'lucide-react';
+import { CheckSquare, DollarSign, Activity, TrendingUp, Briefcase, User, BookOpen, LogOut } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
 import { useNavigate } from 'react-router-dom';
@@ -118,7 +118,8 @@ export const Dashboard: React.FC = () => {
                 </Card>
             </div>
 
-            <Card glass className="p-5 animate-ios-slide-up" style={{ animationDelay: '300ms' } as React.CSSProperties}>
+            <div className="animate-ios-slide-up" style={{ animationDelay: '300ms' } as React.CSSProperties}>
+            <Card glass className="p-5">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-black text-slate-900 text-sm uppercase tracking-widest">Aktivlik</h3>
                     <TrendingUp size={16} className="text-slate-400" />
@@ -164,6 +165,7 @@ export const Dashboard: React.FC = () => {
                     )}
                 </div>
             </Card>
+            </div>
 
             <div className="animate-ios-slide-up" style={{ animationDelay: '400ms' } as React.CSSProperties}>
                 <h3 className="text-sm font-black text-slate-900 mb-3 uppercase tracking-widest">Kategoriyalar</h3>

@@ -3,7 +3,6 @@ import { Card, Badge, Button, LoadingSpinner, LoadingOverlay } from '../shared';
 import { Settings, ArrowUpRight, ArrowDownLeft, ShoppingBag, Car, CreditCard, Coffee, Camera, Edit, Trash2, type LucideIcon } from 'lucide-react';
 import { useStore, type TransactionLocal } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
-import { transactionsApi } from '../../lib/api';
 
 const ICON_MAP: Record<string, LucideIcon> = {
     ShoppingBag, Car, CreditCard, Coffee

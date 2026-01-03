@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Camera, CameraSource } from '@capacitor/camera';
 import { Button } from './UI';
 import { X, Camera as CameraIcon, Image, Loader2 } from 'lucide-react';
 import jsQR from 'jsqr';
@@ -49,7 +49,6 @@ export const QRScanner: React.FC<{ onResult: (result: string) => void; onCancel:
             const image = await Camera.pickImages({
                 quality: 100,
                 limit: 1,
-                source: CameraSource.Photos,
             });
 
             if (image.photos && image.photos.length > 0) {
@@ -87,7 +86,7 @@ export const QRScanner: React.FC<{ onResult: (result: string) => void; onCancel:
 
     const processImageFromUrl = async (imageUrl: string) => {
         return new Promise<void>((resolve, reject) => {
-            const img = new Image();
+            const img = document.createElement('img');
             img.crossOrigin = 'anonymous';
             
             img.onload = () => {

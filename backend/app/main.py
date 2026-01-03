@@ -4,7 +4,8 @@ from app.config import settings
 from app.database import init_db, SessionLocal
 from app.models import Category, User
 from app.utils.auth import get_password_hash
-from app.api import auth, tasks, habits, transactions, budgets, productivity, ai, analytics, optimization
+from app.api import auth, tasks, habits, transactions, budgets, productivity, ai, analytics, optimization, admin
+from app.middleware.logging import LoggingMiddleware
 import uuid
 import logging
 
@@ -30,6 +31,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Logging middleware (add after CORS to log all requests)
+app.add_middleware(LoggingMiddleware)
 
 # Initialize database
 @app.on_event("startup")
@@ -101,6 +105,7 @@ app.include_router(productivity.router, prefix="/api/productivity", tags=["produ
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(optimization.router, prefix="/api/optimization", tags=["optimization"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
 @app.get("/")

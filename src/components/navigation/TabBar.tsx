@@ -49,7 +49,7 @@ export const TabBar: React.FC = () => {
                     title: result.parsed.description || 'QR kod orqali to\'lov',
                     amount: -result.parsed.amount, // Chiqim sifatida
                     type: 'expense',
-                    category: 'Boshqa',
+                    cat: 'Boshqa',
                     date: new Date().toISOString().split('T')[0],
                     icon: 'CreditCard',
                     color: 'bg-slate-100 text-slate-600'

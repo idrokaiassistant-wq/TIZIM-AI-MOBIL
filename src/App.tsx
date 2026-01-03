@@ -91,7 +91,7 @@ export default function App() {
 
 function AppContent() {
   const location = useLocation();
-  const { user, fetchUser } = useStore();
+  const { fetchUser } = useStore();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
