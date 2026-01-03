@@ -185,10 +185,13 @@ CORS_ORIGINS=https://app-production-e8ad.up.railway.app,https://web.telegram.org
 
 ### Frontend Deploy:
 1. Frontend service'ni oching
-2. Settings → Deploy → Build Command: `npm ci --legacy-peer-deps && npm run build`
+2. Settings → Deploy → Build Command: `npm run build` (npm ci kerak emas - install phase'da allaqachon qilingan)
 3. Settings → Deploy → Start Command: `npx serve -s dist -l $PORT`
-4. Variables → `VITE_API_URL` qo'shing
-5. Redeploy
+4. Settings → Deploy → Pre-deploy Command: (bo'sh qoldirish - frontend uchun kerak emas)
+5. Variables → `VITE_API_URL` qo'shing
+6. Redeploy
+
+**Eslatma**: Agar EBUSY cache xatosi bo'lsa, [docs/NIXPACKS_EBUSY_FIX.md](docs/NIXPACKS_EBUSY_FIX.md) ga qarang.
 
 ### n8n Deploy:
 1. New → GitHub Repo
