@@ -43,5 +43,27 @@ export const authApi = {
   logout() {
     apiClient.clearAuthToken();
   },
+
+  async sendTelegramCode(phoneNumber: string): Promise<{ message: string; expires_in_minutes: number }> {
+    const response = await apiClient.instance.post<{ message: string; expires_in_minutes: number }>(
+      '/api/auth/telegram/send-code',
+      { phone_number: phoneNumber }
+    );
+    return response.data;
+  },
+
+  async verifyTelegramCode(phoneNumber: string, code: string): Promise<TokenResponse & { user: User }> {
+    const response = await apiClient.instance.post<TokenResponse & { user: User }>(
+      '/api/auth/telegram/verify-code',
+      { phone_number: phoneNumber, code }
+    );
+    
+    // Store token
+    if (response.data.access_token) {
+      apiClient.setAuthToken(response.data.access_token);
+    }
+    
+    return response.data;
+  },
 };
 

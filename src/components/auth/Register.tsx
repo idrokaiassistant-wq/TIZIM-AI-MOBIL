@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button, Card } from '../shared';
-import { useStore } from '../../lib/store';
+import { useAuthStore } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 export const Register: React.FC = () => {
     const navigate = useNavigate();
-    const { register, loading } = useStore();
+    const { register, loading } = useAuthStore();
     const { showToast } = useToast();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -86,9 +86,8 @@ export const Register: React.FC = () => {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className={`w-full pl-12 pr-4 py-3 rounded-ios-2xl border-2 ${
-                                        errors.email ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
-                                    } focus:border-accent focus:outline-none transition-colors`}
+                                    className={`w-full pl-12 pr-4 py-3 rounded-ios-2xl border-2 ${errors.email ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
+                                        } focus:border-accent focus:outline-none transition-colors`}
                                     placeholder="email@example.com"
                                 />
                             </div>
@@ -107,9 +106,8 @@ export const Register: React.FC = () => {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className={`w-full pl-12 pr-12 py-3 rounded-ios-2xl border-2 ${
-                                        errors.password ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
-                                    } focus:border-accent focus:outline-none transition-colors`}
+                                    className={`w-full pl-12 pr-12 py-3 rounded-ios-2xl border-2 ${errors.password ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
+                                        } focus:border-accent focus:outline-none transition-colors`}
                                     placeholder="••••••••"
                                 />
                                 <button
@@ -135,9 +133,8 @@ export const Register: React.FC = () => {
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className={`w-full pl-12 pr-12 py-3 rounded-ios-2xl border-2 ${
-                                        errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
-                                    } focus:border-accent focus:outline-none transition-colors`}
+                                    className={`w-full pl-12 pr-12 py-3 rounded-ios-2xl border-2 ${errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'
+                                        } focus:border-accent focus:outline-none transition-colors`}
                                     placeholder="••••••••"
                                 />
                                 <button
@@ -156,8 +153,8 @@ export const Register: React.FC = () => {
                         <Button
                             type="submit"
                             className="w-full"
-                            loading={loading.auth}
-                            disabled={loading.auth}
+                            loading={loading}
+                            disabled={loading}
                         >
                             Ro'yxatdan o'tish
                         </Button>

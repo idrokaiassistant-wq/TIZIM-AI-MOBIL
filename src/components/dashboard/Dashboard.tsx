@@ -1,29 +1,39 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, LoadingSpinner } from '../shared';
-import { CheckSquare, DollarSign, Activity, TrendingUp, Briefcase, User, BookOpen, LogOut } from 'lucide-react';
-import { useStore } from '../../lib/store';
+import { CheckSquare, DollarSign, Activity, TrendingUp, Briefcase, User, BookOpen, LogOut, Settings } from 'lucide-react';
+import { useAuthStore, useTasksStore, useFinanceStore } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
 import { useNavigate } from 'react-router-dom';
+import { AppSettings } from '../settings/AppSettings';
+import { ProfileSettings } from '../settings/ProfileSettings';
+import { ActivityChart } from './ActivityChart';
+import { analyticsApi } from '../../lib/api/analytics';
+import { OfflineIndicator } from '../shared/OfflineIndicator';
 
 export const Dashboard: React.FC = () => {
-    const { 
-        tasks, 
-        transactions, 
-        user,
-        loading,
-        fetchTasks, 
-        fetchTransactions,
-        logout 
-    } = useStore();
+    const { user, logout } = useAuthStore();
+    const { tasks, loading: tasksLoading, fetchTasks } = useTasksStore();
+    const { transactions, loading: financeLoading, fetchTransactions } = useFinanceStore();
     const { showToast } = useToast();
     const navigate = useNavigate();
+    const [showSettings, setShowSettings] = useState(false);
+    const [showProfile, setShowProfile] = useState(false);
+    const [activityData, setActivityData] = useState<Array<{ date: string; tasks: number; habits: number; transactions: number }>>([]);
+    const [loadingActivity, setLoadingActivity] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 await Promise.all([fetchTasks(), fetchTransactions()]);
+                
+                // Load activity data
+                setLoadingActivity(true);
+                const activity = await analyticsApi.getActivity();
+                setActivityData(activity);
+                setLoadingActivity(false);
             } catch {
                 showToast('Ma\'lumotlarni yuklashda xatolik yuz berdi', 'error');
+                setLoadingActivity(false);
             }
         };
         loadData();
@@ -42,13 +52,14 @@ export const Dashboard: React.FC = () => {
 
     const userName = user?.full_name || user?.email?.split('@')[0] || 'Foydalanuvchi';
     const currentDate = new Date();
-    const dateStr = currentDate.toLocaleDateString('uz-UZ', { 
-        day: 'numeric', 
-        month: 'long' 
+    const dateStr = currentDate.toLocaleDateString('uz-UZ', {
+        day: 'numeric',
+        month: 'long'
     });
 
     return (
         <div className="p-5 space-y-7 pb-24">
+            <OfflineIndicator />
             <header className="flex justify-between items-center pt-2 animate-ios-slide-up" style={{ animationDelay: '100ms' } as React.CSSProperties}>
                 <div className="flex items-center gap-4">
                     <div className="relative group">
@@ -66,15 +77,19 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={handleLogout}
-                        className="w-10 h-10 rounded-full glass flex items-center justify-center text-slate-600 hover:text-red-600 active:scale-95 ios-transition"
-                        title="Chiqish"
+                        onClick={() => setShowSettings(true)}
+                        className="w-10 h-10 rounded-full glass flex items-center justify-center text-slate-600 hover:text-indigo-600 active:scale-95 ios-transition"
+                        title="Sozlamalar"
                     >
-                        <LogOut size={18} />
+                        <Settings size={18} />
                     </button>
-                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 font-black border border-slate-100 shadow-sm">
+                    <button
+                        onClick={() => setShowProfile(true)}
+                        className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 font-black border border-slate-100 shadow-sm hover:shadow-md ios-transition"
+                        title="Profil"
+                    >
                         {userName.charAt(0).toUpperCase()}
-                    </div>
+                    </button>
                 </div>
             </header>
 
@@ -86,7 +101,7 @@ export const Dashboard: React.FC = () => {
                             <CheckSquare size={20} className="text-indigo-600" />
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vazifalar</span>
                         </div>
-                        {loading.tasks ? (
+                        {tasksLoading ? (
                             <LoadingSpinner size="sm" />
                         ) : (
                             <>
@@ -104,7 +119,7 @@ export const Dashboard: React.FC = () => {
                             <DollarSign size={20} className="text-emerald-600" />
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Balans</span>
                         </div>
-                        {loading.transactions ? (
+                        {financeLoading ? (
                             <LoadingSpinner size="sm" />
                         ) : (
                             <>
@@ -119,80 +134,72 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="animate-ios-slide-up" style={{ animationDelay: '300ms' } as React.CSSProperties}>
-            <Card glass className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-black text-slate-900 text-sm uppercase tracking-widest">Aktivlik</h3>
-                    <TrendingUp size={16} className="text-slate-400" />
-                </div>
-                <div className="space-y-3">
-                    {loading.tasks || loading.transactions ? (
-                        <div className="flex justify-center py-4">
+                <Card glass className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-black text-slate-900 text-sm uppercase tracking-widest">Aktivlik</h3>
+                        <TrendingUp size={16} className="text-slate-400" />
+                    </div>
+                    {loadingActivity ? (
+                        <div className="flex justify-center py-8">
                             <LoadingSpinner size="sm" />
                         </div>
                     ) : (
-                        <>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                                        <CheckSquare size={18} className="text-indigo-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-800">Vazifalar</p>
-                                        <p className="text-[10px] text-slate-400 font-medium">{completedTasks} bajarildi</p>
-                                    </div>
-                                </div>
-                                <span className="text-xs font-black text-slate-600 bg-slate-100 px-2 py-1 rounded-full">
-                                    {tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0}%
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                                        <DollarSign size={18} className="text-emerald-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-800">Moliya</p>
-                                        <p className="text-[10px] text-slate-400 font-medium">
-                                            +{(income / 1000000).toFixed(1)}M / -{(expense / 1000000).toFixed(1)}M
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className="text-xs font-black text-slate-600 bg-slate-100 px-2 py-1 rounded-full">
-                                    {transactions.length} ta
-                                </span>
-                            </div>
-                        </>
+                        <ActivityChart data={activityData} />
                     )}
-                </div>
-            </Card>
+                </Card>
             </div>
 
             <div className="animate-ios-slide-up" style={{ animationDelay: '400ms' } as React.CSSProperties}>
                 <h3 className="text-sm font-black text-slate-900 mb-3 uppercase tracking-widest">Kategoriyalar</h3>
                 <div className="grid grid-cols-2 gap-3">
-                    {[
-                        { icon: Briefcase, label: 'Ish', color: 'indigo', count: tasks.filter(t => t.cat === 'Ish').length },
-                        { icon: User, label: 'Shaxsiy', color: 'blue', count: tasks.filter(t => t.cat === 'Shaxsiy').length },
-                        { icon: BookOpen, label: 'O\'qish', color: 'orange', count: tasks.filter(t => t.cat === 'O\'qish').length },
-                        { icon: Activity, label: 'Barchasi', color: 'purple', count: tasks.length },
-                    ].map((cat, i) => {
-                        const Icon = cat.icon;
-                        return (
-                            <Card key={i} glass className="p-4 group cursor-pointer active:scale-[0.98]">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className={`w-10 h-10 bg-${cat.color}-100 rounded-xl flex items-center justify-center group-hover:scale-110 ios-transition`}>
-                                        <Icon size={20} className={`text-${cat.color}-600`} />
+                    {(() => {
+                        // Get unique categories from tasks
+                        const categories = Array.from(new Set(tasks.map(t => t.cat))).filter(Boolean);
+                        const categoryCounts = categories.map(cat => ({
+                            label: cat,
+                            count: tasks.filter(t => t.cat === cat).length,
+                            icon: Briefcase, // Default icon
+                            color: 'indigo'
+                        }));
+                        
+                        // Add "Barchasi" at the end
+                        categoryCounts.push({
+                            label: 'Barchasi',
+                            count: tasks.length,
+                            icon: Activity,
+                            color: 'purple'
+                        });
+                        
+                        // Limit to 4 items for grid
+                        const displayCategories = categoryCounts.slice(0, 4);
+                        
+                        return displayCategories.map((cat, i) => {
+                            const Icon = cat.icon;
+                            return (
+                                <Card key={i} glass className="p-4 group cursor-pointer active:scale-[0.98]">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className={`w-10 h-10 bg-${cat.color}-100 rounded-xl flex items-center justify-center group-hover:scale-110 ios-transition`}>
+                                            <Icon size={20} className={`text-${cat.color}-600`} />
+                                        </div>
+                                        <span className="text-xs font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                                            {cat.count}
+                                        </span>
                                     </div>
-                                    <span className="text-xs font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                                        {cat.count}
-                                    </span>
-                                </div>
-                                <p className="text-sm font-bold text-slate-800">{cat.label}</p>
-                            </Card>
-                        );
-                    })}
+                                    <p className="text-sm font-bold text-slate-800">{cat.label}</p>
+                                </Card>
+                            );
+                        });
+                    })()}
                 </div>
             </div>
+
+            {showSettings && (
+                <AppSettings onClose={() => setShowSettings(false)} />
+            )}
+
+            {showProfile && (
+                <ProfileSettings onClose={() => setShowProfile(false)} />
+            )}
         </div>
     );
 };

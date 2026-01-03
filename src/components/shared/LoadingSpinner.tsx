@@ -32,7 +32,10 @@ export const LoadingOverlay: React.FC<{ children?: React.ReactNode }> = ({ child
 
 export const SkeletonLoader: React.FC<{ className?: string }> = ({ className = '' }) => {
     return (
-        <div className={`animate-pulse bg-slate-200 rounded-ios-2xl ${className}`} />
+        <div className={`animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] rounded-ios-2xl ${className}`} />
     );
 };
+
+// Re-export skeleton components
+export { TaskSkeleton, CardSkeleton, ListSkeleton, CalendarSkeleton, Skeleton } from './Skeleton';
 

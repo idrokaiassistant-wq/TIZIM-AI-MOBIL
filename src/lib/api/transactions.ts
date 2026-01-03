@@ -57,5 +57,21 @@ export const transactionsApi = {
     );
     return response.data;
   },
+
+  async scanReceipt(imageFile: File): Promise<Transaction> {
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
+    const response = await apiClient.instance.post<Transaction>(
+      '/api/transactions/scan-receipt',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
 };
 

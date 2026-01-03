@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card } from '../shared';
 import { Activity, Database, Brain, Server, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-import { adminApi, HealthResponse, ServiceStatusResponse } from '../../lib/api/admin';
+import { adminApi } from '../../lib/api/admin';
+import type { HealthResponse, ServiceStatusResponse } from '../../lib/api/admin';
 import { monitoringService } from '../../lib/api/monitoring';
 import { MonitoringPanel } from './MonitoringPanel';
 import { MetricsDashboard } from './MetricsDashboard';
@@ -85,13 +86,13 @@ export const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="p-5 space-y-6 pb-24">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <div className="flex gap-2">
+    <div className="p-4 sm:p-5 space-y-4 sm:space-y-6 pb-24">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base whitespace-nowrap flex-shrink-0 ${
               activeTab === 'overview'
                 ? 'bg-indigo-500 text-white'
                 : 'bg-gray-100 text-gray-700'
@@ -101,7 +102,7 @@ export const AdminDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('metrics')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base whitespace-nowrap flex-shrink-0 ${
               activeTab === 'metrics'
                 ? 'bg-indigo-500 text-white'
                 : 'bg-gray-100 text-gray-700'
@@ -111,7 +112,7 @@ export const AdminDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('logs')}
-            className={`px-4 py-2 rounded-lg font-medium ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base whitespace-nowrap flex-shrink-0 ${
               activeTab === 'logs'
                 ? 'bg-indigo-500 text-white'
                 : 'bg-gray-100 text-gray-700'
@@ -141,27 +142,27 @@ export const AdminDashboard: React.FC = () => {
           )}
 
           {/* Service Status Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {/* API Status */}
             {services && (
-              <Card className={`p-6 ${getStatusColor(services.api.status)}`}>
+              <Card className={`p-4 sm:p-6 ${getStatusColor(services.api.status)}`}>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <Server className="w-6 h-6 text-indigo-600" />
-                    <h3 className="font-semibold text-gray-900">API Server</h3>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Server className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 flex-shrink-0" />
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">API Server</h3>
                   </div>
                   {getStatusIcon(services.api.status)}
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Xato darajasi:</span>
                     <span className="font-medium">{services.api.error_rate.toFixed(2)}%</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">O'rtacha javob vaqti:</span>
                     <span className="font-medium">{services.api.avg_response_time.toFixed(0)}ms</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Faol foydalanuvchilar (1h):</span>
                     <span className="font-medium">{services.api.active_users_1h}</span>
                   </div>
@@ -171,20 +172,20 @@ export const AdminDashboard: React.FC = () => {
 
             {/* Database Status */}
             {services && (
-              <Card className={`p-6 ${getStatusColor(services.database.status)}`}>
+              <Card className={`p-4 sm:p-6 ${getStatusColor(services.database.status)}`}>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <Database className="w-6 h-6 text-blue-600" />
-                    <h3 className="font-semibold text-gray-900">Ma'lumotlar bazasi</h3>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Database className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Ma'lumotlar bazasi</h3>
                   </div>
                   {getStatusIcon(services.database.status)}
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Holat:</span>
                     <span className="font-medium">{services.database.status}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Ulanish:</span>
                     <span className="font-medium">
                       {services.database.connected ? 'Ulangan' : 'Uzilgan'}
@@ -196,22 +197,22 @@ export const AdminDashboard: React.FC = () => {
 
             {/* AI Service Status */}
             {services && (
-              <Card className={`p-6 ${getStatusColor(services.ai_service.status)}`}>
+              <Card className={`p-4 sm:p-6 ${getStatusColor(services.ai_service.status)}`}>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <Brain className="w-6 h-6 text-purple-600" />
-                    <h3 className="font-semibold text-gray-900">AI Xizmat</h3>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 flex-shrink-0" />
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">AI Xizmat</h3>
                   </div>
                   {getStatusIcon(services.ai_service.status)}
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">ML:</span>
                     <span className="font-medium">
                       {services.ai_service.ml_enabled ? 'Yoqilgan' : 'O\'chirilgan'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">NLP:</span>
                     <span className="font-medium">
                       {services.ai_service.nlp_enabled ? 'Yoqilgan' : 'O\'chirilgan'}

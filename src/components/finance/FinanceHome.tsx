@@ -1,48 +1,70 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Badge, Button, LoadingSpinner, LoadingOverlay } from '../shared';
-import { Settings, ArrowUpRight, ArrowDownLeft, ShoppingBag, Car, CreditCard, Coffee, Camera, Edit, Trash2, type LucideIcon } from 'lucide-react';
-import { useStore, type TransactionLocal } from '../../lib/store';
+import { Settings, ArrowUpRight, ArrowDownLeft, ShoppingBag, Car, CreditCard, Coffee, Camera, Edit, Trash2, Search, Calendar, type LucideIcon } from 'lucide-react';
+import { useFinanceStore, type TransactionLocal } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
+import { ReceiptScanner } from './ReceiptScanner';
+import { DateRangePicker } from '../shared/DateRangePicker';
+import { AppSettings } from '../settings/AppSettings';
+import { BudgetManager } from './BudgetManager';
+import type { Transaction } from '../../lib/api/types';
+import { mapTransactionFromAPI } from '../../lib/store/mappers';
 
 const ICON_MAP: Record<string, LucideIcon> = {
     ShoppingBag, Car, CreditCard, Coffee
 };
 
 export const FinanceHome: React.FC = () => {
-    const { 
-        transactions, 
-        loading, 
-        fetchTransactions, 
-        addTransaction, 
-        updateTransaction, 
-        deleteTransaction 
-    } = useStore();
+    const {
+        transactions,
+        loading,
+        fetchTransactions,
+        addTransaction,
+        updateTransaction,
+        deleteTransaction
+    } = useFinanceStore();
     const { showToast } = useToast();
     const [editingTransaction, setEditingTransaction] = React.useState<string | null>(null);
     const [editTitle, setEditTitle] = React.useState('');
+    const [activeTab, setActiveTab] = React.useState('Barchasi');
+    const [showScanner, setShowScanner] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [startDate, setStartDate] = useState<string | null>(null);
+    const [endDate, setEndDate] = useState<string | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showBudgets, setShowBudgets] = useState(false);
 
     useEffect(() => {
-        fetchTransactions().catch(() => {
+        const transactionType = activeTab === 'Barchasi' ? undefined : activeTab === 'Kirim' ? 'income' : 'expense';
+        fetchTransactions({
+            search: searchQuery || undefined,
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
+            transactionType
+        }).catch(() => {
             showToast('Tranzaksiyalarni yuklashda xatolik yuz berdi', 'error');
         });
-    }, [fetchTransactions, showToast]);
+    }, [fetchTransactions, showToast, searchQuery, startDate, endDate, activeTab]);
 
-    const handleAddExpense = async () => {
-        const newTx: Partial<TransactionLocal> = {
-            title: 'Yangi xarajat',
-            cat: 'Boshqa',
-            amount: -50000,
-            date: new Date().toISOString().split('T')[0],
-            type: 'expense',
-            icon: 'ShoppingBag',
-            color: 'bg-slate-100 text-slate-600'
-        };
+    const handleScanReceipt = () => {
+        setShowScanner(true);
+    };
+
+    const handleScanSuccess = async (transaction: Transaction) => {
         try {
-            await addTransaction(newTx);
+            const localTx = mapTransactionFromAPI(transaction);
+            await addTransaction(localTx);
+            setShowScanner(false);
             showToast('Tranzaksiya muvaffaqiyatli qo\'shildi', 'success');
+            await fetchTransactions();
         } catch {
             showToast('Tranzaksiya qo\'shishda xatolik yuz berdi', 'error');
         }
+    };
+
+    const handleScanCancel = () => {
+        setShowScanner(false);
     };
 
     const handleDeleteTransaction = async (id: string, e: React.MouseEvent) => {
@@ -101,20 +123,48 @@ export const FinanceHome: React.FC = () => {
         }
     };
 
+    const filteredTransactions = transactions; // Already filtered by API
+
     return (
         <div className="p-5 space-y-6 animate-ios-slide-up bg-ios-bg relative">
-            {loading.transactions && <LoadingOverlay />}
-            
+            {loading && <LoadingOverlay />}
+
             <div className="flex justify-between items-center pt-2">
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Moliya</h1>
                     <p className="text-slate-500 text-xs font-bold mt-0.5 uppercase tracking-wide">Xarajatlaringiz nazorat ostida</p>
                 </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setShowSettings(true)}
+                        className="w-10 h-10 glass rounded-full flex items-center justify-center text-white/80 active:scale-90 ios-transition hover:text-white"
+                    >
+                        <Settings size={20} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex gap-2">
+                <div className="relative flex-1">
+                    <input
+                        type="text"
+                        placeholder="Qidiruv..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white/50 border-none rounded-full px-4 h-10 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-accent/20 ios-transition pr-10"
+                    />
+                    <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                </div>
                 <button
-                    onClick={() => showToast('Moliya sozlamalari yaqinda qo\'shiladi', 'info')}
-                    className="w-10 h-10 glass rounded-full flex items-center justify-center text-white/80 active:scale-90 ios-transition"
+                    onClick={() => setShowDatePicker(true)}
+                    className={`px-4 h-10 rounded-full text-xs font-bold flex items-center gap-2 ios-transition ${
+                        startDate || endDate
+                            ? 'bg-accent text-white'
+                            : 'bg-white/50 text-slate-600 hover:bg-white/70'
+                    }`}
                 >
-                    <Settings size={20} />
+                    <Calendar size={16} />
+                    {startDate || endDate ? 'Sana' : 'Filtr'}
                 </button>
             </div>
 
@@ -160,27 +210,43 @@ export const FinanceHome: React.FC = () => {
             </div>
 
             <div className="bg-slate-200/50 p-1 rounded-2xl flex gap-1">
-                {['Barchasi', 'Kirim', 'Chiqim'].map((tab, i) => (
+                {['Barchasi', 'Kirim', 'Chiqim', 'Byudjet'].map((tab) => (
                     <button
                         key={tab}
-                        className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest ios-transition ${i === 0 ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => {
+                            if (tab === 'Byudjet') {
+                                setShowBudgets(true);
+                            } else {
+                                setActiveTab(tab);
+                                setShowBudgets(false);
+                            }
+                        }}
+                        className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest ios-transition ${
+                            (activeTab === tab && !showBudgets) || (tab === 'Byudjet' && showBudgets)
+                                ? 'bg-white text-slate-900 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
                     >
                         {tab}
                     </button>
                 ))}
             </div>
 
-            {loading.transactions && transactions.length === 0 ? (
+            {showBudgets ? (
+                <BudgetManager />
+            ) : (
+                <>
+                    {loading && transactions.length === 0 ? (
                 <div className="flex justify-center py-12">
                     <LoadingSpinner size="lg" />
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {transactions.map((item) => {
+                    {filteredTransactions.map((item) => {
                         const TxIcon = ICON_MAP[item.icon] || CreditCard;
                         return (
-                            <div 
-                                key={item.id} 
+                            <div
+                                key={item.id}
                                 className="flex items-center justify-between p-4 bg-white rounded-ios-2xl border border-gray-100 shadow-ios active:scale-[0.98] ios-transition cursor-pointer hover:shadow-md relative group"
                             >
                                 <div className="flex items-center gap-4 flex-1">
@@ -258,16 +324,41 @@ export const FinanceHome: React.FC = () => {
             </Card>
 
             <button
-                onClick={handleAddExpense}
+                onClick={handleScanReceipt}
                 className="fixed bottom-28 right-6 bg-accent text-white w-14 h-14 rounded-full shadow-2xl shadow-accent/40 flex items-center justify-center z-40 active:scale-90 ios-transition hover:bg-accent-dark ring-4 ring-white/10"
-                disabled={loading.transactions}
+                disabled={loading}
             >
-                {loading.transactions ? (
+                {loading ? (
                     <LoadingSpinner size="sm" className="text-white" />
                 ) : (
                     <Camera size={26} />
                 )}
             </button>
+
+            {showScanner && (
+                <ReceiptScanner
+                    onSuccess={handleScanSuccess}
+                    onCancel={handleScanCancel}
+                />
+            )}
+
+            {showDatePicker && (
+                <DateRangePicker
+                    startDate={startDate}
+                    endDate={endDate}
+                    onChange={(start, end) => {
+                        setStartDate(start);
+                        setEndDate(end);
+                    }}
+                    onClose={() => setShowDatePicker(false)}
+                />
+            )}
+
+            {showSettings && (
+                <AppSettings onClose={() => setShowSettings(false)} />
+            )}
+                </>
+            )}
         </div>
     );
 };

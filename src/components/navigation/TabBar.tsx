@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, CheckSquare, Maximize, Calendar, DollarSign, X, History, QrCode } from 'lucide-react';
+import { Home, CheckSquare, Maximize, Calendar, DollarSign, X, History, QrCode, TrendingUp } from 'lucide-react';
 import { QRScanner } from '../shared/QRScanner';
 import { QRGenerator } from '../shared/QRGenerator';
 import { QRHistory } from '../shared/QRHistory';
 import { parseQRCode, handleQRResultAction } from '../../utils/qrHandler';
-import { useStore } from '../../lib/store';
+import { useFinanceStore } from '../../lib/store';
 import { useQRHistory } from '../../lib/store/qrHistory';
 import { useToast } from '../shared/ErrorToast';
 
@@ -15,7 +15,7 @@ export const TabBar: React.FC = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
-    const { addTransaction } = useStore();
+    const { addTransaction } = useFinanceStore();
     const { addToHistory } = useQRHistory();
     const { showToast } = useToast();
 
@@ -39,9 +39,9 @@ export const TabBar: React.FC = () => {
     const handleQRResult = async (data: string) => {
         // Tarixga qo'shish
         addToHistory(data);
-        
+
         const result = parseQRCode(data);
-        
+
         // Tranzaksiya bo'lsa, avtomatik qo'shish
         if (result.type === 'transaction' && result.parsed?.amount) {
             try {
@@ -62,7 +62,7 @@ export const TabBar: React.FC = () => {
             // Boshqa ma'lumotlar uchun standart ishlov berish
             await handleQRResultAction(result);
         }
-        
+
         setShowScanner(false);
     };
 
@@ -78,6 +78,7 @@ export const TabBar: React.FC = () => {
                         <div className="w-14 h-14" />
 
                         <TabItem to="/habits" icon={<Calendar size={24} />} label="Odat" />
+                        <TabItem to="/productivity" icon={<TrendingUp size={24} />} label="Produktivlik" />
                         <TabItem to="/finance" icon={<DollarSign size={24} />} label="Moliya" />
                     </div>
 
@@ -149,7 +150,7 @@ export const TabBar: React.FC = () => {
             )}
 
             {showHistory && (
-                <QRHistory 
+                <QRHistory
                     onClose={() => setShowHistory(false)}
                     onSelect={(data) => {
                         handleQRResult(data);

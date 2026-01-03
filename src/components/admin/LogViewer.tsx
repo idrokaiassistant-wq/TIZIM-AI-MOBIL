@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card } from '../shared';
-import { Search, Filter, Download, RefreshCw, AlertCircle, Info, XCircle } from 'lucide-react';
-import { adminApi, LogEntry } from '../../lib/api/admin';
+import { Search, Download, RefreshCw, AlertCircle, Info, XCircle } from 'lucide-react';
+import { adminApi } from '../../lib/api/admin';
+import type { LogEntry } from '../../lib/api/admin';
 
 export const LogViewer: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -97,10 +98,10 @@ export const LogViewer: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Filters */}
-      <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Card className="p-3 sm:p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -133,11 +134,11 @@ export const LogViewer: React.FC = () => {
             className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 sm:col-span-2 lg:col-span-1">
             <select
               value={hours}
               onChange={(e) => setHours(Number(e.target.value))}
-              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value={1}>Oxirgi 1 soat</option>
               <option value={6}>Oxirgi 6 soat</option>
@@ -146,41 +147,43 @@ export const LogViewer: React.FC = () => {
             </select>
             <button
               onClick={loadLogs}
-              className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+              className="px-3 sm:px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 active:scale-95 transition-transform"
+              aria-label="Yangilash"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
               onClick={exportLogs}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              className="px-3 sm:px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-transform"
+              aria-label="Export"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
       </Card>
 
       {/* Logs List */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+      <Card className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
             Loglar ({total})
           </h3>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg disabled:opacity-50"
+              className="px-3 sm:px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg disabled:opacity-50 active:scale-95 transition-transform"
             >
               Oldingi
             </button>
-            <span className="px-3 py-1 text-sm text-gray-600">
+            <span className="px-3 py-2 text-xs sm:text-sm text-gray-600">
               {page} / {Math.ceil(total / pageSize)}
             </span>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= Math.ceil(total / pageSize)}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg disabled:opacity-50"
+              className="px-3 sm:px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg disabled:opacity-50 active:scale-95 transition-transform"
             >
               Keyingi
             </button>
@@ -197,27 +200,32 @@ export const LogViewer: React.FC = () => {
             Loglar topilmadi
           </div>
         ) : (
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
+          <div className="space-y-2 max-h-[500px] sm:max-h-[600px] overflow-y-auto -mx-3 sm:mx-0 px-3 sm:px-0">
             {logs.map((log) => (
               <div
                 key={log.id}
-                className={`p-4 rounded-lg border ${getLevelColor(log.level)}`}
+                className={`p-3 sm:p-4 rounded-lg border ${getLevelColor(log.level)}`}
               >
-                <div className="flex items-start gap-3">
-                  {getLevelIcon(log.level)}
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="flex-shrink-0 mt-0.5">{getLevelIcon(log.level)}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-sm">{log.level}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(log.timestamp).toLocaleString('uz-UZ')}
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5">
+                      <span className="font-semibold text-xs sm:text-sm">{log.level}</span>
+                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                        {new Date(log.timestamp).toLocaleString('uz-UZ', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </span>
                       {log.endpoint && (
-                        <span className="text-xs bg-gray-200 px-2 py-0.5 rounded">
-                          {log.method} {log.endpoint}
+                        <span className="text-xs bg-gray-200 px-1.5 sm:px-2 py-0.5 rounded truncate max-w-[150px] sm:max-w-none">
+                          {log.method} {log.endpoint.length > 20 ? log.endpoint.substring(0, 20) + '...' : log.endpoint}
                         </span>
                       )}
                       {log.status_code && (
-                        <span className={`text-xs px-2 py-0.5 rounded ${
+                        <span className={`text-xs px-1.5 sm:px-2 py-0.5 rounded whitespace-nowrap ${
                           log.status_code >= 400
                             ? 'bg-red-200 text-red-700'
                             : log.status_code >= 300
@@ -228,12 +236,12 @@ export const LogViewer: React.FC = () => {
                         </span>
                       )}
                       {log.response_time && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
                           {log.response_time.toFixed(0)}ms
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700 break-words">{log.message}</p>
+                    <p className="text-xs sm:text-sm text-gray-700 break-words">{log.message}</p>
                     {log.error_details && (
                       <details className="mt-2">
                         <summary className="text-xs text-red-600 cursor-pointer">

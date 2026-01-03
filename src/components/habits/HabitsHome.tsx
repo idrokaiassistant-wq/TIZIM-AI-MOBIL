@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Button, LoadingSpinner, LoadingOverlay } from '../shared';
-import { Plus, Check, Flame, Book, Droplets, Zap, Dumbbell, Edit, Trash2, type LucideIcon } from 'lucide-react';
-import { useStore, type HabitLocal } from '../../lib/store';
+import { Plus, Check, Flame, Book, Droplets, Zap, Dumbbell, Edit, Trash2, Search, type LucideIcon } from 'lucide-react';
+import { useHabitsStore, type HabitLocal } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -9,24 +9,26 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 export const HabitsHome: React.FC = () => {
-    const { 
-        habits, 
-        loading, 
-        fetchHabits, 
-        addHabit, 
-        updateHabit, 
-        deleteHabit, 
-        toggleHabit 
-    } = useStore();
+    const {
+        habits,
+        loading,
+        fetchHabits,
+        addHabit,
+        updateHabit,
+        deleteHabit,
+        toggleHabit
+    } = useHabitsStore();
     const { showToast } = useToast();
     const [editingHabit, setEditingHabit] = React.useState<string | null>(null);
     const [editTitle, setEditTitle] = React.useState('');
+    const [activeCategory, setActiveCategory] = React.useState('Barchasi');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        fetchHabits().catch(() => {
+        fetchHabits({ search: searchQuery, category: activeCategory }).catch(() => {
             showToast('Odatlarni yuklashda xatolik yuz berdi', 'error');
         });
-    }, [fetchHabits, showToast]);
+    }, [fetchHabits, showToast, searchQuery, activeCategory]);
 
     const weekDays = ['D', 'S', 'C', 'P', 'J', 'S', 'Y'];
 
@@ -95,26 +97,41 @@ export const HabitsHome: React.FC = () => {
         setEditTitle('');
     };
 
-    // Calculate weekly completion (mock for now)
-    const weeklyCompletion = habits.filter(h => h.completed).length;
-    const totalHabits = habits.length;
+    const filteredHabits = habits; // Already filtered by API
+
+    // Calculate weekly completion from actual habits data
+    const weeklyCompletion = filteredHabits.filter(h => h.completed).length;
+    const totalHabits = filteredHabits.length;
+    const completionRate = totalHabits > 0 ? (weeklyCompletion / totalHabits) * 100 : 0;
 
     return (
         <div className="p-5 space-y-6 animate-ios-slide-up bg-ios-bg relative">
             {loading.habits && <LoadingOverlay />}
-            
+
             <div className="flex justify-between items-center pt-2">
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Odatlar</h1>
                     <p className="text-slate-500 text-xs font-bold mt-0.5 uppercase tracking-wide">Barqarorlik — muvaffaqiyat kaliti</p>
                 </div>
-                <Button 
-                    className="w-10 h-10 rounded-2xl p-0 flex items-center justify-center shadow-lg" 
-                    onClick={handleAddHabit}
-                    loading={loading.habits}
-                >
-                    <Plus size={24} />
-                </Button>
+                <div className="flex gap-2">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Qidiruv..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-32 focus:w-48 bg-white/50 border-none rounded-full px-4 h-10 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-accent/20 ios-transition pr-10"
+                        />
+                        <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    </div>
+                    <Button
+                        className="w-10 h-10 rounded-2xl p-0 flex items-center justify-center shadow-lg"
+                        onClick={handleAddHabit}
+                        loading={loading.habits}
+                    >
+                        <Plus size={24} />
+                    </Button>
+                </div>
             </div>
 
             <Card glass className="p-4">
@@ -124,24 +141,44 @@ export const HabitsHome: React.FC = () => {
                         {weeklyCompletion}/{totalHabits} ODAT
                     </span>
                 </div>
+                <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-slate-600">Bajarilgan:</span>
+                        <span className="text-xs font-bold text-slate-900">{completionRate.toFixed(0)}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-accent rounded-full ios-transition" 
+                            style={{ width: `${completionRate}%` }}
+                        />
+                    </div>
+                </div>
                 <div className="flex justify-between">
-                    {weekDays.map((day, i) => (
-                        <div key={i} className="flex flex-col items-center gap-2">
-                            <span className="text-[10px] font-black text-slate-400">{day}</span>
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 ios-transition ${i <= 2 ? 'bg-accent border-accent text-white shadow-lg' : 'bg-white border-slate-100 text-slate-200'}`}>
-                                {i <= 2 ? <Check size={16} strokeWidth={3} /> : <span className="text-xs font-bold">{10 + i}</span>}
+                    {weekDays.map((day, i) => {
+                        // Calculate completion for each day (simplified - using current habits)
+                        const dayCompleted = i < weeklyCompletion;
+                        return (
+                            <div key={i} className="flex flex-col items-center gap-2">
+                                <span className="text-[10px] font-black text-slate-400">{day}</span>
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 ios-transition ${
+                                    dayCompleted 
+                                        ? 'bg-accent border-accent text-white shadow-lg' 
+                                        : 'bg-white border-slate-100 text-slate-200'
+                                }`}>
+                                    {dayCompleted ? <Check size={16} strokeWidth={3} /> : <span className="text-xs font-bold">{i + 1}</span>}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </Card>
 
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
-                {['Barchasi', 'Salomatlik', 'O\'qish', 'Sport'].map((cat, i) => (
+                {['Barchasi', 'Salomatlik', 'O\'qish', 'Sport'].map((cat) => (
                     <button
                         key={cat}
-                        onClick={() => cat !== 'Barchasi' && showToast('Ushbu kategoriya filtratsiyasi yaqinda qo\'shiladi', 'info')}
-                        className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ios-transition ${i === 0 ? 'bg-accent text-white shadow-md' : 'bg-white text-slate-500 border border-slate-100'}`}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ios-transition ${activeCategory === cat ? 'bg-accent text-white shadow-md' : 'bg-white text-slate-500 border border-slate-100'}`}
                     >
                         {cat}
                     </button>
@@ -154,7 +191,7 @@ export const HabitsHome: React.FC = () => {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {habits.map((habit) => {
+                    {filteredHabits.map((habit) => {
                         const HabitIcon = ICON_MAP[habit.icon] || Zap;
                         return (
                             <Card
@@ -190,10 +227,15 @@ export const HabitsHome: React.FC = () => {
                                                 </h4>
                                             )}
                                             <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1 bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-100">
+                                                <div className="flex items-center gap-1 bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-100" title={`Joriy: ${habit.streak}, Eng uzoq: ${habit.longestStreak || 0}`}>
                                                     <Flame size={12} className="text-orange-500 fill-orange-500" />
                                                     <span className="text-xs font-black text-orange-600">{habit.streak}</span>
                                                 </div>
+                                                {habit.longestStreak > 0 && habit.longestStreak !== habit.streak && (
+                                                    <div className="text-[10px] font-bold text-slate-400">
+                                                        Rekord: {habit.longestStreak}
+                                                    </div>
+                                                )}
                                                 {editingHabit !== habit.id && (
                                                     <div className="flex gap-1">
                                                         <button

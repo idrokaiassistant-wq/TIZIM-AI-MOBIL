@@ -118,3 +118,4 @@ export const QRGenerator: React.FC<QRGeneratorProps> = ({ onClose }) => {
     );
 };
 
+

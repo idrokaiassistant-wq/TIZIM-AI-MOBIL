@@ -1,5 +1,5 @@
 import { Card } from '../shared';
-import { HealthResponse, ServiceStatusResponse } from '../../lib/api/admin';
+import type { HealthResponse, ServiceStatusResponse } from '../../lib/api/admin';
 import { Activity, Clock, Users, TrendingUp } from 'lucide-react';
 
 interface MonitoringPanelProps {
@@ -13,51 +13,51 @@ export const MonitoringPanel: React.FC<MonitoringPanelProps> = ({ health, servic
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Monitoring</h2>
+    <Card className="p-4 sm:p-6">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Monitoring</h2>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {/* API Response Time */}
-        <div className="bg-indigo-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-indigo-600" />
-            <span className="text-sm font-medium text-gray-700">Javob vaqti</span>
+        <div className="bg-indigo-50 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Javob vaqti</span>
           </div>
-          <p className="text-2xl font-bold text-indigo-900">
+          <p className="text-xl sm:text-2xl font-bold text-indigo-900">
             {services.api.avg_response_time.toFixed(0)}ms
           </p>
         </div>
 
         {/* Error Rate */}
-        <div className="bg-red-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Activity className="w-5 h-5 text-red-600" />
-            <span className="text-sm font-medium text-gray-700">Xato darajasi</span>
+        <div className="bg-red-50 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Xato darajasi</span>
           </div>
-          <p className="text-2xl font-bold text-red-900">
+          <p className="text-xl sm:text-2xl font-bold text-red-900">
             {services.api.error_rate.toFixed(2)}%
           </p>
         </div>
 
         {/* Active Users */}
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-medium text-gray-700">Faol foydalanuvchilar</span>
+        <div className="bg-green-50 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Faol foydalanuvchilar</span>
           </div>
-          <p className="text-2xl font-bold text-green-900">
+          <p className="text-xl sm:text-2xl font-bold text-green-900">
             {services.api.active_users_1h}
           </p>
           <p className="text-xs text-gray-500 mt-1">Soat davomida</p>
         </div>
 
         {/* Database Status */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-            <span className="text-sm font-medium text-gray-700">Ma'lumotlar bazasi</span>
+        <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Ma'lumotlar bazasi</span>
           </div>
-          <p className="text-lg font-bold text-blue-900">
+          <p className="text-base sm:text-lg font-bold text-blue-900">
             {services.database.connected ? 'Ulangan' : 'Uzilgan'}
           </p>
           <p className="text-xs text-gray-500 mt-1">{services.database.status}</p>

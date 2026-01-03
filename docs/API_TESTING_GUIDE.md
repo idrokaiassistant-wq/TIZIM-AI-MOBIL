@@ -185,3 +185,4 @@ Xuddi shu pattern habits va transactions uchun ham mavjud.
 3. Loading states qo'shish
 4. Offline support (keyinchalik)
 
+

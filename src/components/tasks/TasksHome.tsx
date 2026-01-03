@@ -1,24 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Badge, Button, LoadingSpinner, LoadingOverlay } from '../shared';
-import { Search, Plus, Clock, Check, Edit, Trash2 } from 'lucide-react';
-import { useStore, type TaskLocal } from '../../lib/store';
+import { Card, Badge, Button, LoadingSpinner, LoadingOverlay, TaskSkeleton } from '../shared';
+import { Search, Plus, Clock, Check, Edit, Trash2, AlertCircle, Flag, Calendar, Grid, List } from 'lucide-react';
+import { useTasksStore, type TaskLocal } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
+import { WeeklyView } from './views/WeeklyView';
+import { MonthlyView } from './views/MonthlyView';
+import { CalendarView } from './views/CalendarView';
 
 export const TasksHome: React.FC = () => {
-    const { 
-        tasks, 
-        loading, 
-        fetchTasks, 
-        addTask, 
-        updateTask, 
-        deleteTask, 
-        toggleTask 
-    } = useStore();
+    const {
+        tasks,
+        loading,
+        fetchTasks,
+        addTask,
+        updateTask,
+        deleteTask,
+        toggleTask
+    } = useTasksStore();
     const { showToast } = useToast();
-    const [activeDate, setActiveDate] = useState(3);
+    const [activeDate, setActiveDate] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
     const [activeCategory, setActiveCategory] = useState('Barchasi');
     const [editingTask, setEditingTask] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState<'date' | 'priority' | 'title'>('date');
+    const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly' | 'calendar'>(() => {
+        const saved = localStorage.getItem('tasksViewMode');
+        return (saved as 'daily' | 'weekly' | 'monthly' | 'calendar') || 'daily';
+    });
 
     useEffect(() => {
         fetchTasks().catch(() => {
@@ -26,13 +35,34 @@ export const TasksHome: React.FC = () => {
         });
     }, [fetchTasks, showToast]);
 
+    useEffect(() => {
+        localStorage.setItem('tasksViewMode', viewMode);
+    }, [viewMode]);
+
     const weekDays = ['D', 'S', 'C', 'P', 'J', 'S', 'Y'];
-    const dates = [10, 11, 12, 13, 14, 15, 16];
+
+    // Get dates for current week starting from Monday
+    const getWeekDates = () => {
+        const now = new Date();
+        const monday = new Date(now);
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        monday.setDate(diff);
+
+        return Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            return d.toISOString().split('T')[0];
+        });
+    };
+    const dateObjects = getWeekDates();
+    const dates = dateObjects.map(d => new Date(d).getDate());
 
     const handleAddTask = async () => {
         const newTask: Partial<TaskLocal> = {
             title: 'Yangi vazifa',
             time: 'Hozir',
+            date: dateObjects[activeDate],
             cat: 'Ish',
             color: 'indigo',
             status: 'pending',
@@ -91,43 +121,104 @@ export const TasksHome: React.FC = () => {
         setEditTitle('');
     };
 
-    const filteredTasks = tasks.filter(t =>
-        activeCategory === 'Barchasi' ? true : t.cat === activeCategory
-    );
-
-    const pendingTasks = filteredTasks.filter(t => t.status === 'pending');
-    const doneTasks = filteredTasks.filter(t => t.status === 'done');
-
-    const currentDate = new Date();
-    const dateStr = currentDate.toLocaleDateString('uz-UZ', { 
-        day: 'numeric', 
-        month: 'long' 
+    const filteredTasks = tasks.filter(t => {
+        const matchesCategory = activeCategory === 'Barchasi' ? true : t.cat === activeCategory;
+        const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesDate = t.date === dateObjects[activeDate];
+        return matchesCategory && matchesSearch && matchesDate;
     });
 
+    // Sort tasks
+    const sortedTasks = [...filteredTasks].sort((a, b) => {
+        if (sortBy === 'priority') {
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            const aPriority = priorityOrder[a.priority || 'medium'] || 2;
+            const bPriority = priorityOrder[b.priority || 'medium'] || 2;
+            return bPriority - aPriority;
+        } else if (sortBy === 'title') {
+            return a.title.localeCompare(b.title);
+        } else { // date
+            return new Date(a.date).getTime() - new Date(b.date).getTime();
+        }
+    });
+
+    const pendingTasks = sortedTasks.filter(t => t.status === 'pending');
+    const doneTasks = sortedTasks.filter(t => t.status === 'done');
+
+    const currentDate = new Date();
+    const dateStr = currentDate.toLocaleDateString('uz-UZ', {
+        day: 'numeric',
+        month: 'long'
+    });
+
+    // Render different views
+    if (viewMode === 'weekly') {
+        return <WeeklyView />;
+    }
+
+    if (viewMode === 'monthly') {
+        return <MonthlyView />;
+    }
+
+    if (viewMode === 'calendar') {
+        return <CalendarView />;
+    }
+
+    // Daily view (default)
     return (
         <div className="p-5 space-y-6 animate-ios-slide-up flex flex-col h-full bg-ios-bg relative">
             {loading.tasks && <LoadingOverlay />}
-            
+
             <div className="flex justify-between items-center pt-2">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Vazifalar</h1>
                     <p className="text-slate-500 text-xs font-medium mt-0.5">Bugun, {dateStr}</p>
                 </div>
                 <div className="flex gap-2">
-                    <button
-                        onClick={() => showToast('Izlash funksiyasi yaqinda qo\'shiladi', 'info')}
-                        className="w-10 h-10 rounded-full glass flex items-center justify-center text-slate-600 active:scale-95 ios-transition"
-                    >
-                        <Search size={20} />
-                    </button>
-                    <Button 
-                        className="w-10 h-10 rounded-2xl p-0 flex items-center justify-center shadow-lg" 
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Qidiruv..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-32 focus:w-48 bg-white/50 border-none rounded-full px-4 h-10 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-accent/20 ios-transition pr-10"
+                        />
+                        <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    </div>
+                    <Button
+                        className="w-10 h-10 rounded-2xl p-0 flex items-center justify-center shadow-lg"
                         onClick={handleAddTask}
                         loading={loading.tasks}
                     >
                         <Plus size={24} />
                     </Button>
                 </div>
+            </div>
+
+            {/* View Switcher */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+                {[
+                    { value: 'daily', label: 'Kunlik', icon: List },
+                    { value: 'weekly', label: 'Haftalik', icon: Grid },
+                    { value: 'monthly', label: 'Oylik', icon: Calendar },
+                    { value: 'calendar', label: 'Kalendar', icon: Calendar },
+                ].map((view) => {
+                    const Icon = view.icon;
+                    return (
+                        <button
+                            key={view.value}
+                            onClick={() => setViewMode(view.value as any)}
+                            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap ios-transition flex items-center gap-2 ${
+                                viewMode === view.value 
+                                    ? 'bg-accent text-white shadow-md' 
+                                    : 'bg-white text-slate-500 border border-gray-100'
+                            }`}
+                        >
+                            <Icon size={14} />
+                            {view.label}
+                        </button>
+                    );
+                })}
             </div>
 
             <Card glass className="p-3">
@@ -146,16 +237,37 @@ export const TasksHome: React.FC = () => {
                 </div>
             </Card>
 
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
-                {['Barchasi', 'Ish', 'Shaxsiy', 'O\'qish'].map((cat) => (
-                    <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap ios-transition ${activeCategory === cat ? 'bg-accent text-white shadow-md' : 'bg-white text-slate-500 border border-gray-100'}`}
-                    >
-                        {cat}
-                    </button>
-                ))}
+            <div className="space-y-2">
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+                    {['Barchasi', 'Ish', 'Shaxsiy', 'O\'qish'].map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setActiveCategory(cat)}
+                            className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap ios-transition ${activeCategory === cat ? 'bg-accent text-white shadow-md' : 'bg-white text-slate-500 border border-gray-100'}`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+                    {[
+                        { value: 'date', label: 'Sana' },
+                        { value: 'priority', label: 'Prioritet' },
+                        { value: 'title', label: 'Nomi' }
+                    ].map((sort) => (
+                        <button
+                            key={sort.value}
+                            onClick={() => setSortBy(sort.value as 'date' | 'priority' | 'title')}
+                            className={`px-4 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap ios-transition ${
+                                sortBy === sort.value 
+                                    ? 'bg-slate-200 text-slate-900 shadow-sm' 
+                                    : 'bg-white/50 text-slate-500 border border-gray-100'
+                            }`}
+                        >
+                            {sort.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="flex-1 space-y-8 overflow-y-auto pb-6">
@@ -166,15 +278,17 @@ export const TasksHome: React.FC = () => {
                         <span className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">{pendingTasks.length}</span>
                     </h3>
                     {loading.tasks && tasks.length === 0 ? (
-                        <div className="flex justify-center py-8">
-                            <LoadingSpinner size="lg" />
+                        <div className="space-y-3">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <TaskSkeleton key={i} />
+                            ))}
                         </div>
                     ) : pendingTasks.length > 0 ? (
                         <div className="space-y-3">
                             {pendingTasks.map((task) => (
-                                <Card 
-                                    key={task.id} 
-                                    className="flex items-start gap-4 active:scale-[0.99] border-l-4 border-l-accent p-4 group relative" 
+                                <Card
+                                    key={task.id}
+                                    className="flex items-start gap-4 active:scale-[0.99] border-l-4 border-l-accent p-4 group relative"
                                     onClick={() => handleToggleTask(task.id)}
                                 >
                                     <div className="mt-1">
@@ -222,11 +336,30 @@ export const TasksHome: React.FC = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3 mt-2">
+                                        <div className="flex items-center gap-3 mt-2 flex-wrap">
                                             <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
                                                 <Clock size={10} /> {task.time}
                                             </span>
-                                            <Badge variant={task.color as any}>{task.cat}</Badge>
+                                            <Badge variant={task.color || 'blue'}>{task.cat}</Badge>
+                                            {task.priority && (
+                                                <Badge 
+                                                    variant={
+                                                        task.priority === 'high' ? 'red' : 
+                                                        task.priority === 'medium' ? 'orange' : 
+                                                        'gray'
+                                                    }
+                                                    className="flex items-center gap-1"
+                                                >
+                                                    <Flag size={8} />
+                                                    {task.priority === 'high' ? 'Yuqori' : 
+                                                     task.priority === 'medium' ? 'O\'rta' : 'Past'}
+                                                </Badge>
+                                            )}
+                                            {task.description && (
+                                                <span className="text-[10px] text-slate-400 italic" title={task.description}>
+                                                    {task.description.length > 30 ? task.description.substring(0, 30) + '...' : task.description}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>
@@ -250,9 +383,9 @@ export const TasksHome: React.FC = () => {
                         </h3>
                         <div className="space-y-3">
                             {doneTasks.map((task) => (
-                                <Card 
-                                    key={task.id} 
-                                    className="flex items-start gap-4 opacity-50 grayscale active:scale-[0.99] p-4" 
+                                <Card
+                                    key={task.id}
+                                    className="flex items-start gap-4 opacity-50 grayscale active:scale-[0.99] p-4"
                                     onClick={() => handleToggleTask(task.id)}
                                 >
                                     <div className="mt-1">

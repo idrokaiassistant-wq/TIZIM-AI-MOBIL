@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Card, LoadingSpinner } from '../shared';
 import { Check, Plus, BookOpen } from 'lucide-react';
-import { useStore, type TaskLocal } from '../../lib/store';
+import { useTasksStore, type TaskLocal } from '../../lib/store';
 import { useToast } from '../shared/ErrorToast';
 
 export const TodayFocus: React.FC = () => {
-    const { 
-        tasks, 
-        loading, 
-        fetchTasks, 
-        toggleTask, 
-        addTask 
-    } = useStore();
+    const {
+        tasks,
+        loading,
+        fetchTasks,
+        toggleTask,
+        addTask
+    } = useTasksStore();
     const { showToast } = useToast();
     const [notes, setNotes] = useState('');
 
@@ -49,9 +49,9 @@ export const TodayFocus: React.FC = () => {
     };
 
     const currentDate = new Date();
-    const dateStr = currentDate.toLocaleDateString('uz-UZ', { 
-        day: 'numeric', 
-        month: 'short' 
+    const dateStr = currentDate.toLocaleDateString('uz-UZ', {
+        day: 'numeric',
+        month: 'short'
     });
 
     return (

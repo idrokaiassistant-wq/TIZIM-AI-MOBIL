@@ -5,20 +5,33 @@ import { TasksHome } from './components/tasks/TasksHome';
 import { TodayFocus } from './components/today/TodayFocus';
 import { HabitsHome } from './components/habits/HabitsHome';
 import { FinanceHome } from './components/finance/FinanceHome';
+import { AdminDashboard } from './components/admin/AdminDashboard';
+import { ProductivityHome } from './components/productivity/ProductivityHome';
 import { TabBar } from './components/navigation/TabBar';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ToastProvider } from './components/shared/ErrorToast';
-import { useStore } from './lib/store';
+import { NotificationManager } from './components/shared/NotificationManager';
+import { ErrorBoundary } from './components/shared/ErrorBoundary';
+import { errorHandler } from './lib/utils/errorHandler';
+import { useAuthStore } from './lib/store';
 import { Smartphone, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import './styles/globals.css';
 
+function NotFoundRedirect() {
+  return <Navigate to="/dashboard" replace />;
+}
+
 const MobileWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isMobilePreview, setIsMobilePreview] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const location = useLocation();
+  
+  // Hide TabBar on login/register pages
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -31,7 +44,7 @@ const MobileWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         {children}
       </div>
-      <TabBar />
+      {!isAuthPage && <TabBar />}
     </>
   );
 
@@ -81,17 +94,25 @@ const MobileWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 export default function App() {
   return (
-    <ToastProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </ToastProvider>
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        errorHandler.logError(error, {
+          componentStack: errorInfo.componentStack,
+        });
+      }}
+    >
+      <ToastProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 
 function AppContent() {
   const location = useLocation();
-  const { fetchUser } = useStore();
+  const { fetchUser } = useAuthStore();
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -106,7 +127,8 @@ function AppContent() {
     };
 
     checkAuth();
-  }, [fetchUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fetchUser is stable from zustand store
 
   if (checkingAuth) {
     return (
@@ -121,62 +143,79 @@ function AppContent() {
 
   return (
     <MobileWrapper>
+      <NotificationManager />
       <AnimatePresence initial={false}>
         <Routes location={location} key={location.pathname}>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
+
           {/* Protected routes */}
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               <ProtectedRoute>
                 <Navigate to="/dashboard" replace />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <PageWrapper><Dashboard /></PageWrapper>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/tasks" 
+          <Route
+            path="/tasks"
             element={
               <ProtectedRoute>
                 <PageWrapper><TasksHome /></PageWrapper>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/today" 
+          <Route
+            path="/today"
             element={
               <ProtectedRoute>
                 <PageWrapper><TodayFocus /></PageWrapper>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/habits" 
+          <Route
+            path="/habits"
             element={
               <ProtectedRoute>
                 <PageWrapper><HabitsHome /></PageWrapper>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/finance" 
+          <Route
+            path="/finance"
             element={
               <ProtectedRoute>
                 <PageWrapper><FinanceHome /></PageWrapper>
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/productivity"
+            element={
+              <ProtectedRoute>
+                <PageWrapper><ProductivityHome /></PageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <PageWrapper><AdminDashboard /></PageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFoundRedirect />} />
         </Routes>
       </AnimatePresence>
     </MobileWrapper>

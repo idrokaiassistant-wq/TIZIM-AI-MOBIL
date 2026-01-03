@@ -36,7 +36,7 @@ export const QRHistory: React.FC<QRHistoryProps> = ({ onClose, onSelect }) => {
             onSelect(item.data);
         } else {
             const result = { type: item.type, data: item.data, parsed: item.parsed };
-            await handleQRResultAction(result as any);
+            await handleQRResultAction(result);
         }
     };
 
