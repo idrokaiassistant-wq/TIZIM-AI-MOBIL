@@ -95,7 +95,25 @@ Service'da **Settings** → **Service Settings** → **Use Configuration File** 
 
 ---
 
-### 3. Frontend npm Dependency Muammosi
+### 3. Nixpacks npm Undefined Variable Xatosi
+
+Frontend build paytida quyidagi xato bo'lsa:
+```
+error: undefined variable 'npm'
+at /app/.nixpacks/nixpkgs-...nix:19:19
+nodejs_18 npm
+```
+
+**Yechim**: `nixpacks.toml` faylida `npm` ni olib tashlash. `nodejs_18` paketiga `npm` allaqachon kiritilgan.
+
+```toml
+[phases.setup]
+nixPkgs = ["nodejs_18"]  # npm ni olib tashlash - nodejs_18 npm ni o'z ichiga oladi
+```
+
+---
+
+### 4. Frontend npm Dependency Muammosi
 
 Frontend build paytida dependency conflict bo'lsa:
 
@@ -122,7 +140,7 @@ npm ci --legacy-peer-deps && npm run build
 
 ---
 
-### 4. Backend CORS Sozlash
+### 5. Backend CORS Sozlash
 
 Frontend URL'ni backend CORS'ga qo'shing:
 
