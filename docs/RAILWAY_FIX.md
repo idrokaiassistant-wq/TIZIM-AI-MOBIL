@@ -113,6 +113,36 @@ nixPkgs = ["nodejs_18"]  # npm ni olib tashlash - nodejs_18 npm ni o'z ichiga ol
 
 ---
 
+### 3.1. Nixpacks EBUSY Cache Xatosi
+
+Frontend build paytida quyidagi xato bo'lsa:
+```
+npm error EBUSY: resource busy or locked, rmdir '/app/node_modules/.cache'
+```
+
+**Sabab**: Build phase'da `npm ci` qayta ishga tushadi va cache mount bilan conflict yuzaga keladi.
+
+**Yechim**: 
+1. `railway-frontend.json` yoki Dashboard'da build command'da `npm ci` ni olib tashlash
+2. Build command faqat `npm run build` bo'lishi kerak
+
+**Dashboard'da**:
+- **Build Command**: `npm run build` (npm ci ni olib tashlash)
+- **Pre-deploy Command**: bo'sh qoldirish (frontend uchun kerak emas)
+
+**railway-frontend.json**:
+```json
+{
+  "build": {
+    "buildCommand": "npm run build"
+  }
+}
+```
+
+**Eslatma**: Railway avtomatik install phase'ni ishlatadi (`nixpacks.toml` da `[phases.install]`), shuning uchun build command'da `npm ci` kerak emas.
+
+---
+
 ### 4. Frontend npm Dependency Muammosi
 
 Frontend build paytida dependency conflict bo'lsa:

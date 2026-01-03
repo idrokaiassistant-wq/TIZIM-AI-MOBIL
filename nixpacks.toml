@@ -6,6 +6,7 @@ cmds = ["npm ci --legacy-peer-deps"]
 
 [phases.build]
 cmds = ["npm run build"]
+# Eslatma: npm ci install phase'da allaqachon ishlatilgan, shuning uchun bu yerda kerak emas
 
 [start]
 cmd = "npx serve -s dist -l ${PORT:-3000}"
