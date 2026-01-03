@@ -1,0 +1,79 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+dist-ssr
+build
+*.local
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/tizim_ai.db
+backend/**/tizim_ai.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Capacitor
+android/.gradle
+android/app/build
+android/build
+android/local.properties
+ios/Pods
+ios/App/App.xcworkspace/xcuserdata
+
+# n8n (keep source, ignore built files)
+n8n/.env
+n8n/node_modules
+n8n/packages/*/node_modules
+n8n/packages/*/dist
+n8n/.n8n
+
+# Temporary files
+*.tmp
+*.temp
+.cache
