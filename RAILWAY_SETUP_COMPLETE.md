@@ -14,7 +14,13 @@
 
 ## 📋 Railway Dashboard'da Qilish Kerak Bo'lgan Ishlar
 
-### Frontend Service (app)
+### Frontend Service (app) - MUAMMO: Root Directory Tuzatish
+
+**⚠️ MUHIM**: Frontend service'da Root Directory `/android/app` ga o'rnatilgan, bu noto'g'ri!
+
+**Settings → Source:**
+1. **Root Directory**: `/android/app` → `/` ga o'zgartiring (yoki bo'sh qoldiring)
+2. **Update** tugmasini bosing
 
 **Settings → Deploy:**
 1. **Build Command**: `npm ci --legacy-peer-deps && npm run build`
@@ -23,10 +29,15 @@
 
 **Yoki `nixpacks.toml` fayli avtomatik ishlatiladi** (allaqachon mavjud)
 
+**Batafsil ko'rsatma**: [docs/FRONTEND_ROOT_DIRECTORY_FIX.md](docs/FRONTEND_ROOT_DIRECTORY_FIX.md)
+
 ---
 
 ### n8n Service Yaratish
 
+**Batafsil ko'rsatma**: [docs/N8N_SERVICE_SETUP.md](docs/N8N_SERVICE_SETUP.md)
+
+Qisqa ko'rsatma:
 1. Railway Dashboard → **New** → **GitHub Repo**
 2. Repository: `idrokaiassistant-wq/TIZIM-AI-MOBIL`
 3. Service nomi: `n8n`

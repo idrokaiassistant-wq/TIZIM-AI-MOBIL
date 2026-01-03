@@ -3,6 +3,16 @@
 ## Muammolar
 
 ### 1. Frontend Deploy Muammosi
+
+#### Muammo A: Root Directory Noto'g'ri
+Frontend service'da Root Directory `/android/app` ga o'rnatilgan, bu noto'g'ri. Bu tufayli:
+- Railpack builder npm topa olmayapti (`npm: not found`)
+- Build jarayoni muvaffaqiyatsiz bo'ladi
+- Frontend deploy qilinmaydi
+
+**Yechim**: [docs/FRONTEND_ROOT_DIRECTORY_FIX.md](docs/FRONTEND_ROOT_DIRECTORY_FIX.md)
+
+#### Muammo B: Railpack Builder Aniqlay Olmayapti
 Railpack frontend'ni aniqlay olmayapti, chunki u `android/` papkasidagi `build.gradle` faylini ko'rib Java deb o'ylayapti.
 
 ### 2. n8n Deploy Qilinmagan
@@ -19,7 +29,8 @@ Railway dashboard'da frontend service uchun quyidagilarni sozlang:
 #### Service Settings:
 1. Service'ni oching yoki yangi service yarating
 2. **Settings** → **Source**:
-   - Root Directory: `/` (default)
+   - **Root Directory**: `/` ga o'zgartiring (agar `/android/app` bo'lsa)
+   - **Update** tugmasini bosing
 3. **Settings** → **Deploy**:
    - **Build Command**: `npm ci --legacy-peer-deps && npm run build`
    - **Start Command**: `npx serve -s dist -l $PORT`
@@ -36,6 +47,8 @@ Service'da **Settings** → **Service Settings** → **Use Configuration File** 
 ---
 
 ### 2. n8n Service Qo'shish
+
+**Batafsil ko'rsatma**: [docs/N8N_SERVICE_SETUP.md](docs/N8N_SERVICE_SETUP.md)
 
 #### Yangi Service Yaratish:
 1. Railway dashboard'da **New** → **GitHub Repo**
