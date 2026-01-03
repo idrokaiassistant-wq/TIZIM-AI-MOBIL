@@ -1,34 +1,46 @@
 import pytest
 from datetime import date, datetime, timedelta
-from app.database import SessionLocal, init_db
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.database import Base
 from app.models import User, Task, Habit, Transaction
 from app.services.ai.task_priority_service import TaskPriorityService
 from app.services.ai.recommendation_service import RecommendationService
 from app.services.ai.anomaly_detection_service import AnomalyDetectionService
 from app.services.ai.insights_service import InsightsService
 from app.services.nlp.task_parser import TaskParser
+import uuid
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def db():
-    """Database session"""
-    init_db()
-    db = SessionLocal()
-    yield db
-    db.close()
+    """Database session for service tests"""
+    test_db_url = "sqlite:///:memory:"
+    engine = create_engine(test_db_url, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        Base.metadata.drop_all(bind=engine)
+        engine.dispose()
 
 
 @pytest.fixture
 def test_user(db):
     """Test user yaratish"""
+    unique_id = str(uuid.uuid4())[:8]
     user = User(
-        id="test_user_123",
-        email="test@example.com",
+        id=f"test_user_{unique_id}",
+        email=f"test_{unique_id}@example.com",
         password_hash="hashed_password",
         full_name="Test User"
     )
     db.add(user)
     db.commit()
+    db.refresh(user)
     return user
 
 

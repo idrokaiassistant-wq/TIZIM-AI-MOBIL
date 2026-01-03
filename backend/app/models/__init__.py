@@ -9,6 +9,8 @@ from .note import Note
 from .category import Category
 from .log import Log
 from .metric import Metric
+from .telegram_code import TelegramCode
+from .telegram_user import TelegramUser
 
 __all__ = [
     "User",
@@ -22,5 +24,7 @@ __all__ = [
     "Category",
     "Log",
     "Metric",
+    "TelegramCode",
+    "TelegramUser",
 ]
 

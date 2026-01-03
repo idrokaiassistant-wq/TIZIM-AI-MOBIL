@@ -13,3 +13,4 @@ class Metric(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     tags = Column(Text, nullable=True)  # JSON string for additional metadata
 
+

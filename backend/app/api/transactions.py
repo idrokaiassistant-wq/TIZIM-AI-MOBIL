@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import date
@@ -12,6 +12,7 @@ from app.schemas.transaction import (
     TransactionStats,
 )
 from app.services import transaction_service
+from app.services.ai.receipt_scanner_service import ReceiptScannerService
 
 router = APIRouter()
 
@@ -114,4 +115,52 @@ async def get_transaction_stats(
     return transaction_service.get_transaction_stats(
         db, current_user.id, start_date, end_date
     )
+
+
+@router.post("/scan-receipt", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+async def scan_receipt(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Scan receipt image and create transaction"""
+    try:
+        # Read image data
+        image_data = await file.read()
+        
+        # Validate image format
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File must be an image"
+            )
+        
+        # Scan receipt
+        scanner = ReceiptScannerService()
+        extracted_data = await scanner.scan_receipt(image_data)
+        
+        # Create transaction from extracted data
+        transaction_data = TransactionCreate(
+            title=extracted_data["title"],
+            description=extracted_data.get("description", ""),
+            category=extracted_data["category"],
+            amount=extracted_data["amount"],
+            transaction_type="expense",
+            transaction_date=date.fromisoformat(extracted_data["date"]),
+            icon="ShoppingBag",
+            color="bg-slate-100 text-slate-600",
+        )
+        
+        # Create transaction
+        transaction = transaction_service.create_transaction(
+            db, transaction_data, current_user.id
+        )
+        
+        return transaction
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to scan receipt: {str(e)}"
+        )
 

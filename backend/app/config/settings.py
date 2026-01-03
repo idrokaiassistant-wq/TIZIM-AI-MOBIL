@@ -28,6 +28,20 @@ class Settings(BaseSettings):
         "http://localhost:5173,http://localhost:3000"
     )
     
+    # Email/SMTP Settings
+    smtp_host: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user: Optional[str] = os.getenv("SMTP_USER", None)
+    smtp_password: Optional[str] = os.getenv("SMTP_PASSWORD", None)
+    smtp_from: Optional[str] = os.getenv("SMTP_FROM", None)
+    email_enabled: bool = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
+    
+    # Telegram Bot Settings
+    telegram_bot_token: Optional[str] = os.getenv("TELEGRAM_BOT_TOKEN", None)
+    telegram_code_expire_minutes: int = int(os.getenv("TELEGRAM_CODE_EXPIRE_MINUTES", "10"))
+    telegram_code_attempts: int = int(os.getenv("TELEGRAM_CODE_ATTEMPTS", "3"))
+    telegram_code_rate_limit_minutes: int = int(os.getenv("TELEGRAM_CODE_RATE_LIMIT_MINUTES", "1"))
+    
     @property
     def cors_origins(self) -> list[str]:
         """Parse CORS origins from environment variable"""

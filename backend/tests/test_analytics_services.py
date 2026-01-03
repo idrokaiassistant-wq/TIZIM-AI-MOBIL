@@ -1,32 +1,44 @@
 import pytest
 from datetime import date, timedelta
-from app.database import SessionLocal, init_db
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.database import Base
 from app.models import User, ProductivityLog, Transaction
 from app.services.analytics.time_series_service import TimeSeriesService
 from app.services.analytics.trend_analyzer import TrendAnalyzer
 from app.services.analytics.statistical_reports import StatisticalReports
+import uuid
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def db():
-    """Database session"""
-    init_db()
-    db = SessionLocal()
-    yield db
-    db.close()
+    """Database session for service tests"""
+    test_db_url = "sqlite:///:memory:"
+    engine = create_engine(test_db_url, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        Base.metadata.drop_all(bind=engine)
+        engine.dispose()
 
 
 @pytest.fixture
 def test_user(db):
     """Test user yaratish"""
+    unique_id = str(uuid.uuid4())[:8]
     user = User(
-        id="test_user_analytics",
-        email="analytics@example.com",
+        id=f"test_user_analytics_{unique_id}",
+        email=f"analytics_{unique_id}@example.com",
         password_hash="hashed_password",
         full_name="Test User"
     )
     db.add(user)
     db.commit()
+    db.refresh(user)
     return user
 
 

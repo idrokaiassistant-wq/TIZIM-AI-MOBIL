@@ -21,9 +21,10 @@ class Token(BaseModel):
 
 class UserResponse(BaseModel):
     id: str
-    email: str
-    full_name: Optional[str]
-    avatar_url: Optional[str]
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
     timezone: str
     language: str
     created_at: datetime
@@ -39,3 +40,17 @@ class UserUpdate(BaseModel):
     timezone: Optional[str] = None
     language: Optional[str] = None
 
+
+class TelegramSendCodeRequest(BaseModel):
+    phone_number: str
+
+
+class TelegramVerifyCodeRequest(BaseModel):
+    phone_number: str
+    code: str
+
+
+class TelegramLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse

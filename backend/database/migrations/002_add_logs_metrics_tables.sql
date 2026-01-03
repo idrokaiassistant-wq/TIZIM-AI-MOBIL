@@ -36,3 +36,4 @@ CREATE TABLE IF NOT EXISTS metrics (
 CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp);
 CREATE INDEX IF NOT EXISTS idx_metrics_name ON metrics(metric_name);
 
+

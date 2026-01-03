@@ -20,3 +20,4 @@ class Log(Base):
     ip_address = Column(String, nullable=True)
     user_agent = Column(String, nullable=True)
 
+

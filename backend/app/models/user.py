@@ -8,8 +8,9 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(String, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    password_hash = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=True)
+    password_hash = Column(String, nullable=True)
+    phone_number = Column(String, unique=True, index=True, nullable=True)
     full_name = Column(String, nullable=True)
     avatar_url = Column(Text, nullable=True)
     timezone = Column(String, default="Asia/Tashkent")

@@ -1,15 +1,95 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import Optional
-from datetime import date
+from sqlalchemy import func, and_
+from typing import Optional, List, Dict
+from datetime import date, datetime, timedelta
 from app.database import get_db
-from app.models import User
+from app.models import User, Task, Habit, Transaction
 from app.api.auth import get_current_user
 from app.services.analytics.time_series_service import TimeSeriesService
 from app.services.analytics.trend_analyzer import TrendAnalyzer
 from app.services.analytics.statistical_reports import StatisticalReports
 
 router = APIRouter()
+
+
+@router.get("/activity")
+async def get_activity(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Kunlik aktivlik ma'lumotlari"""
+    try:
+        if not start_date:
+            start_date = date.today() - timedelta(days=7)
+        if not end_date:
+            end_date = date.today()
+        
+        # Get tasks count by date
+        tasks_by_date = db.query(
+            func.date(Task.created_at).label('date'),
+            func.count(Task.id).label('count')
+        ).filter(
+            and_(
+                Task.user_id == current_user.id,
+                func.date(Task.created_at) >= start_date,
+                func.date(Task.created_at) <= end_date
+            )
+        ).group_by(func.date(Task.created_at)).all()
+        
+        # Get habits count by date
+        habits_by_date = db.query(
+            func.date(Habit.created_at).label('date'),
+            func.count(Habit.id).label('count')
+        ).filter(
+            and_(
+                Habit.user_id == current_user.id,
+                func.date(Habit.created_at) >= start_date,
+                func.date(Habit.created_at) <= end_date
+            )
+        ).group_by(func.date(Habit.created_at)).all()
+        
+        # Get transactions count by date
+        transactions_by_date = db.query(
+            func.date(Transaction.created_at).label('date'),
+            func.count(Transaction.id).label('count')
+        ).filter(
+            and_(
+                Transaction.user_id == current_user.id,
+                func.date(Transaction.created_at) >= start_date,
+                func.date(Transaction.created_at) <= end_date
+            )
+        ).group_by(func.date(Transaction.created_at)).all()
+        
+        # Create date range
+        date_range = []
+        current = start_date
+        while current <= end_date:
+            date_range.append(current)
+            current += timedelta(days=1)
+        
+        # Build response
+        result = []
+        for d in date_range:
+            tasks_count = next((t.count for t in tasks_by_date if t.date == d), 0)
+            habits_count = next((h.count for h in habits_by_date if h.date == d), 0)
+            transactions_count = next((tx.count for tx in transactions_by_date if tx.date == d), 0)
+            
+            result.append({
+                "date": d.strftime("%d %b"),
+                "tasks": tasks_count,
+                "habits": habits_count,
+                "transactions": transactions_count
+            })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get activity: {str(e)}"
+        )
 
 
 @router.get("/trends/productivity")

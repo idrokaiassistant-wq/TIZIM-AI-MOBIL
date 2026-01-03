@@ -4,10 +4,11 @@ from app.config import settings
 from app.database import init_db, SessionLocal
 from app.models import Category, User
 from app.utils.auth import get_password_hash
-from app.api import auth, tasks, habits, transactions, budgets, productivity, ai, analytics, optimization, admin
+from app.api import auth, tasks, habits, transactions, budgets, productivity, ai, analytics, optimization, admin, notifications, export_import, telegram_webhook
 from app.middleware.logging import LoggingMiddleware
 import uuid
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -38,6 +39,11 @@ app.add_middleware(LoggingMiddleware)
 # Initialize database
 @app.on_event("startup")
 async def startup_event():
+    # Skip initialization in test mode
+    if os.getenv("TESTING") == "true":
+        logger.info("Skipping database initialization in test mode")
+        return
+    
     logger.info("Initializing database...")
     init_db()
     
@@ -87,6 +93,15 @@ async def startup_event():
             logger.info(f"Default user created successfully: {user.email} (ID: {user.id})")
         else:
             logger.info(f"Default user already exists: {default_user.email} (ID: {default_user.id})")
+            # Verify password hash is valid, fix if corrupted
+            try:
+                from app.utils.auth import verify_password
+                verify_password("test123456", default_user.password_hash)
+            except Exception:
+                logger.warning("Password hash is corrupted, fixing...")
+                default_user.password_hash = get_password_hash("test123456")
+                db.commit()
+                logger.info("Password hash fixed successfully")
     except Exception as e:
         logger.error(f"Error creating default user: {str(e)}", exc_info=True)
         db.rollback()
@@ -106,6 +121,10 @@ app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(optimization.router, prefix="/api/optimization", tags=["optimization"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
+app.include_router(export_import.router, prefix="/api/export", tags=["export"])
+app.include_router(export_import.router, prefix="/api/import", tags=["import"])
+app.include_router(telegram_webhook.router, prefix="/api/telegram", tags=["telegram"])
 
 
 @app.get("/")

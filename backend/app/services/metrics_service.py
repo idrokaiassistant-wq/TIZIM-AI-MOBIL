@@ -102,24 +102,38 @@ class MetricsService:
         """Get request volume over time"""
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
         
-        # Group by time intervals
-        results = (
-            db.query(
-                func.strftime(
-                    f"%Y-%m-%d %H:00:00",
-                    Log.timestamp
-                ).label("time_bucket"),
-                func.count(Log.id).label("count"),
+        # Group by time intervals - SQLite uses different syntax than PostgreSQL
+        # For SQLite, use strftime; for PostgreSQL, use date_trunc
+        from app.config import settings
+        
+        if "sqlite" in settings.database_url.lower():
+            # SQLite
+            results = (
+                db.query(
+                    func.strftime("%Y-%m-%d %H:00:00", Log.timestamp).label("time_bucket"),
+                    func.count(Log.id).label("count"),
+                )
+                .filter(Log.timestamp >= cutoff_time)
+                .group_by("time_bucket")
+                .order_by("time_bucket")
+                .all()
             )
-            .filter(Log.timestamp >= cutoff_time)
-            .group_by("time_bucket")
-            .order_by("time_bucket")
-            .all()
-        )
+        else:
+            # PostgreSQL
+            results = (
+                db.query(
+                    func.date_trunc("hour", Log.timestamp).label("time_bucket"),
+                    func.count(Log.id).label("count"),
+                )
+                .filter(Log.timestamp >= cutoff_time)
+                .group_by("time_bucket")
+                .order_by("time_bucket")
+                .all()
+            )
         
         return [
             {
-                "timestamp": r.time_bucket,
+                "timestamp": str(r.time_bucket),
                 "count": r.count,
             }
             for r in results

@@ -43,6 +43,7 @@ class AIConfig(BaseSettings):
         env_prefix = "AI_"
         case_sensitive = False
         protected_namespaces = ('settings_',)
+        extra = "ignore"  # Ignore extra fields from .env that don't belong to AI config
 
 
 ai_config = AIConfig()

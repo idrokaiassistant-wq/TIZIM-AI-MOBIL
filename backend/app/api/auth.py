@@ -3,16 +3,22 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
-from app.schemas.auth import UserRegister, Token, UserResponse, UserUpdate
+from app.models.telegram_code import TelegramCode
+from app.schemas.auth import (
+    UserRegister, Token, UserResponse, UserUpdate,
+    TelegramSendCodeRequest, TelegramVerifyCodeRequest, TelegramLoginResponse
+)
 from app.utils.auth import (
     verify_password,
     get_password_hash,
     create_access_token,
     decode_access_token,
 )
+from app.services.telegram_service import create_code, verify_code, normalize_phone_number
 from datetime import timedelta
 import uuid
 import logging
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -159,4 +165,77 @@ async def debug_list_users(
         }
         for user in users
     ]
+
+
+@router.post("/telegram/send-code", status_code=status.HTTP_200_OK)
+async def telegram_send_code(
+    request: TelegramSendCodeRequest,
+    db: Session = Depends(get_db)
+):
+    """Send verification code via Telegram"""
+    try:
+        code = create_code(db, request.phone_number)
+        if code:
+            return {
+                "message": "Code sent successfully",
+                "expires_in_minutes": settings.telegram_code_expire_minutes
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to send code. Please check phone number format and try again later."
+            )
+    except Exception as e:
+        logger.error(f"Error sending Telegram code: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error sending verification code"
+        )
+
+
+@router.post("/telegram/verify-code", response_model=TelegramLoginResponse, status_code=status.HTTP_200_OK)
+async def telegram_verify_code(
+    request: TelegramVerifyCodeRequest,
+    db: Session = Depends(get_db)
+):
+    """Verify code and login/register user"""
+    normalized_phone = normalize_phone_number(request.phone_number)
+    
+    # Verify code
+    if not verify_code(db, request.phone_number, request.code):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired code"
+        )
+    
+    # Find or create user
+    user = db.query(User).filter(User.phone_number == normalized_phone).first()
+    
+    if not user:
+        # Create new user
+        user = User(
+            id=str(uuid.uuid4()),
+            phone_number=normalized_phone,
+            email=None,
+            password_hash=None,
+            full_name=None,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info(f"New user created via Telegram: {normalized_phone}")
+    else:
+        logger.info(f"User logged in via Telegram: {normalized_phone}")
+    
+    # Create access token
+    access_token_expires = timedelta(minutes=60 * 24)  # 24 hours
+    access_token = create_access_token(
+        data={"sub": user.id}, expires_delta=access_token_expires
+    )
+    
+    return TelegramLoginResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=user
+    )
 
