@@ -42,6 +42,7 @@ class AIConfig(BaseSettings):
         env_file = ".env"
         env_prefix = "AI_"
         case_sensitive = False
+        protected_namespaces = ('settings_',)
 
 
 ai_config = AIConfig()

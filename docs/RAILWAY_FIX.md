@@ -1,0 +1,176 @@
+# Railway Deploy Muammolarini Hal Qilish
+
+## Muammolar
+
+### 1. Frontend Deploy Muammosi
+Railpack frontend'ni aniqlay olmayapti, chunki u `android/` papkasidagi `build.gradle` faylini ko'rib Java deb o'ylayapti.
+
+### 2. n8n Deploy Qilinmagan
+n8n service Railway dashboard'da ko'rinmayapti.
+
+---
+
+## Yechimlar
+
+### 1. Frontend Service Sozlash
+
+Railway dashboard'da frontend service uchun quyidagilarni sozlang:
+
+#### Service Settings:
+1. Service'ni oching yoki yangi service yarating
+2. **Settings** → **Source**:
+   - Root Directory: `/` (default)
+3. **Settings** → **Deploy**:
+   - **Build Command**: `npm ci --legacy-peer-deps && npm run build`
+   - **Start Command**: `npx serve -s dist -l $PORT`
+   - **Output Directory**: `dist`
+
+#### Environment Variables:
+```
+VITE_API_URL=https://backend-production-219b.up.railway.app
+```
+
+#### Yoki `railway-frontend.json` ishlatish:
+Service'da **Settings** → **Service Settings** → **Use Configuration File** → `railway-frontend.json` tanlang.
+
+---
+
+### 2. n8n Service Qo'shish
+
+#### Yangi Service Yaratish:
+1. Railway dashboard'da **New** → **GitHub Repo**
+2. Repository: `idrokaiassistant-wq/TIZIM-AI-MOBIL`
+3. Service nomini o'zgartiring: `n8n`
+
+#### Service Settings:
+1. **Settings** → **Source**:
+   - Root Directory: `n8n`
+2. **Settings** → **Deploy**:
+   - **Build Command**: `pnpm install`
+   - **Start Command**: `pnpm start`
+
+#### Environment Variables:
+```env
+# Backend API
+BACKEND_API_URL=https://backend-production-219b.up.railway.app
+
+# n8n Basic Auth
+N8N_BASIC_AUTH_ACTIVE=true
+N8N_BASIC_AUTH_USER=admin
+N8N_BASIC_AUTH_PASSWORD=<sizning-xavfsiz-parol>
+
+# n8n Host
+N8N_HOST=0.0.0.0
+N8N_PORT=$PORT
+
+# n8n Protocol (agar custom domain bo'lsa)
+WEBHOOK_URL=https://your-n8n.railway.app
+
+# Telegram Bot (agar kerak bo'lsa)
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+
+# Email SMTP (agar kerak bo'lsa)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM=your-email@gmail.com
+```
+
+#### Yoki `railway-n8n.json` ishlatish:
+Service'da **Settings** → **Service Settings** → **Use Configuration File** → `railway-n8n.json` tanlang.
+
+---
+
+### 3. Frontend npm Dependency Muammosi
+
+Frontend build paytida dependency conflict bo'lsa:
+
+#### Yechim A: `package.json` ga qo'shing:
+```json
+{
+  "scripts": {
+    "install": "npm install --legacy-peer-deps",
+    "build": "npm run install && npm run build:prod",
+    "build:prod": "tsc -b && vite build"
+  }
+}
+```
+
+#### Yechim B: `.npmrc` fayl yaratish:
+```
+legacy-peer-deps=true
+```
+
+#### Yechim C: Railway Build Command'da:
+```
+npm ci --legacy-peer-deps && npm run build
+```
+
+---
+
+### 4. Backend CORS Sozlash
+
+Frontend URL'ni backend CORS'ga qo'shing:
+
+Backend service → **Variables**:
+```
+CORS_ORIGINS=https://app-production-e8ad.up.railway.app,https://web.telegram.org
+```
+
+---
+
+## Qadamlar
+
+### Frontend Deploy:
+1. Frontend service'ni oching
+2. Settings → Deploy → Build Command: `npm ci --legacy-peer-deps && npm run build`
+3. Settings → Deploy → Start Command: `npx serve -s dist -l $PORT`
+4. Variables → `VITE_API_URL` qo'shing
+5. Redeploy
+
+### n8n Deploy:
+1. New → GitHub Repo
+2. Repository tanlang
+3. Root Directory: `n8n`
+4. Environment variables qo'shing
+5. Deploy
+
+---
+
+## Test
+
+### Backend:
+```
+https://backend-production-219b.up.railway.app/health
+https://backend-production-219b.up.railway.app/docs
+```
+
+### Frontend (deploy qilingandan keyin):
+```
+https://app-production-e8ad.up.railway.app
+```
+
+### n8n (deploy qilingandan keyin):
+```
+https://your-n8n.railway.app
+```
+
+---
+
+## Troubleshooting
+
+### Frontend build xatosi:
+- `--legacy-peer-deps` flag'ni qo'shing
+- `.npmrc` fayl yaratish
+- `node_modules` va `package-lock.json` ni o'chirib qayta install qilish
+
+### n8n ishlamayapti:
+- Root Directory `n8n` ekanligini tekshiring
+- pnpm o'rnatilganini tekshiring
+- PORT environment variable mavjudligini tekshiring
+
+### CORS xatosi:
+- Frontend URL backend CORS_ORIGINS'da mavjudligini tekshiring
+- Telegram web app domain qo'shilganini tekshiring
+
